@@ -1,0 +1,13 @@
+spring:
+  main:
+    web-application-type: reactive
+  profiles:
+    active: dev
+  application:
+    name: Applikasi
+application:
+  security:
+    validasi: 360000
+    remember-me: 1000000
+    # untuk generate key silahkan gunakan command openssl rand -base64 64
+    secret: vHPJST0lessUGvH/W8HVlihERtV4OWMSkseiDm/1/K/BPfvuyjr9JEqHsBPTpZatg4fx+ywtV7xb13zE0p8lTQ==

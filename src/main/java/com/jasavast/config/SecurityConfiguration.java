@@ -5,6 +5,7 @@ import com.jasavast.core.security.filter.TokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UserDetailsRepositoryReactiveAuthenticationManager;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
@@ -42,11 +43,13 @@ public class SecurityConfiguration {
                 .authenticationManager(reactiveAuthenticationManager())
                 .and()
                 .authorizeExchange()
+                .pathMatchers(HttpMethod.OPTIONS).permitAll()
                 .pathMatchers("/api/register").permitAll()
                 .pathMatchers("/login").permitAll()
                 .pathMatchers("/swagger-resources/**").permitAll()
                 .pathMatchers("/swagger-ui/**").permitAll()
                 .pathMatchers("/v2/api-docs").permitAll()
+                .pathMatchers("/**").permitAll()
                 .pathMatchers("/api/**").authenticated()
                 .and()
                 .build();
