@@ -1,9 +1,10 @@
 package com.jasavast.config;
 
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories;
+import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
 
 @Configuration
-@EnableReactiveMongoRepositories(basePackages = "com.jasavast.repository")
+@EnableR2dbcRepositories(basePackages = {"com.jasavast.repository"})
 public class DatabaseConfiguration {
+
 }

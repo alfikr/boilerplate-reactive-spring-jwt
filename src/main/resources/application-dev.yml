@@ -1,0 +1,11 @@
+spring:
+  r2dbc:
+    url:
+    username:
+    password:
+    pool:
+      max-size: 20
+      initial-size: 10
+      enabled: true
+server:
+  port:
