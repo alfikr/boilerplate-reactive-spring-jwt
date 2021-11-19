@@ -1,10 +1,10 @@
 package com.jasavast.config;
 
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @Configuration
-@EnableR2dbcRepositories(basePackages = {"com.jasavast.repository"})
+@EnableJpaRepositories(basePackages = {"com.jasavast.repository"})
 public class DatabaseConfiguration {
 
 }
