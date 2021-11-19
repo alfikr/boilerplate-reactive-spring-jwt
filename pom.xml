@@ -86,6 +86,11 @@
 			<artifactId>problem-spring-webflux</artifactId>
 			<version>${zalando.webflux.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>org.aspectj</groupId>
+			<artifactId>aspectjweaver</artifactId>
+			<version>1.9.6</version>
+		</dependency>
 
 		<!--		dokumentasi-->
 		<dependency>
