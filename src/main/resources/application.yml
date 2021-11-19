@@ -5,6 +5,9 @@ spring:
     active: dev
   application:
     name: Applikasi
+#    Please configure pom first before use liquibase
+  liquibase:
+    enabled: false
 application:
   security:
     validasi: 360000

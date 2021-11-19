@@ -5,12 +5,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 @Data
 @NoArgsConstructor
@@ -47,6 +46,7 @@ public class AuditEventModel {
     private String methodName;
     private String message;
     private String title;
-//    @Transient
-//    private Map data = new HashMap<>();
+    @Transient
+    private Map<String,String> data = new HashMap<>();
+
 }
