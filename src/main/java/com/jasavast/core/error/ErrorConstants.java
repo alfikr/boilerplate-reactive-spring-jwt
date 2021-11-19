@@ -1,5 +1,7 @@
 package com.jasavast.core.error;
 
+import liquibase.pro.packaged.U;
+
 import java.net.URI;
 
 public class ErrorConstants {
@@ -16,4 +18,6 @@ public class ErrorConstants {
     public static final URI INVALID_ID_TYPE=URI.create(PROBLEM_BASE_URL+"/invalid-id");
     public static final URI ACTIVATION_CODE_TYPE=URI.create(PROBLEM_BASE_URL+"/aktivasi-kode-salah");
     public static final URI USER_NOT_ACTIVATED_TYPE=URI.create(PROBLEM_BASE_URL+"/user-tidak-aktif");
+    public static final URI METHOD_NOT_FOUND_TYPE=URI.create(PROBLEM_BASE_URL+"/method-tidak-ditemukan");
+    public static final URI METHOD_NOT_ALLOWED_TYPE= URI.create(PROBLEM_BASE_URL+"/http-method-tidak-diperkenankan");
 }
