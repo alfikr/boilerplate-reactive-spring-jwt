@@ -24,7 +24,7 @@ public class SecurityUserService implements ReactiveUserDetailsService {
     private UserRepository userRepository;
     @Override
     public Mono<UserDetails> findByUsername(String s) {
-        return userRepository.findOneByLogin(s.toLowerCase())
+        return Mono.justOrEmpty(userRepository.findOneByLogin(s.toLowerCase()))
                 .switchIfEmpty(Mono.error(new UsernameNotFoundException("User "+s.toLowerCase()+" tidak ditemukan")))
                 .map(user -> {
                     if (!user.isAktif()){
