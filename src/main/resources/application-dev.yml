@@ -1,11 +1,12 @@
 spring:
-  r2dbc:
-    url:
+  datasource:
+    driver-class-name: org.postgresql.Driver
     username:
     password:
-    pool:
-      max-size: 20
-      initial-size: 10
-      enabled: true
+    url:
+    hikari:
+      maximum-pool-size: 10
+      auto-commit: true
+      idle-timeout: 50
 server:
-  port:
+  port: 8080
