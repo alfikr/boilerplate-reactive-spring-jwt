@@ -5,6 +5,7 @@ import org.springframework.boot.actuate.audit.AuditEvent;
 import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.stereotype.Component;
 
+import java.time.ZoneId;
 import java.util.*;
 @Component
 public class AuditEventConverter {
@@ -49,7 +50,7 @@ public class AuditEventConverter {
         if (auditEvent==null){
             return null;
         }
-        return new AuditEvent(auditEvent.getAuditEventDate(),auditEvent.getPrincipal(),
+        return new AuditEvent(auditEvent.getAuditEventDate().atZone(ZoneId.systemDefault()).toInstant(),auditEvent.getPrincipal(),
                 auditEvent.getAuditEventType(),
                 convertDataToObjects(auditEvent.getData()));
     }

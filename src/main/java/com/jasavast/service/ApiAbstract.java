@@ -1,18 +1,13 @@
 package com.jasavast.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
-import org.springframework.http.server.reactive.ServerHttpRequest;
-import org.springframework.http.server.reactive.ServerHttpResponse;
+import org.json.JSONObject;
 
 public class ApiAbstract {
-    private ServerHttpResponse httpResponse;
-    private ServerHttpRequest httpRequest;
-    @Autowired
-    private ReactiveMongoTemplate template;
-    public void init(ServerHttpRequest request, ServerHttpResponse response){
-        this.httpRequest=request;
-        this.httpResponse=response;
+    protected JSONObject req;
+    protected JSONObject reqData;
+    public void init(JSONObject req){
+        this.req=req;
+        this.reqData=req.getJSONObject("data");
     }
 
 }
