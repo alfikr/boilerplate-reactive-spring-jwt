@@ -18,4 +18,7 @@ public class ErrorConstants {
     public static final URI USER_NOT_ACTIVATED_TYPE=URI.create(PROBLEM_BASE_URL+"/user-tidak-aktif");
     public static final URI METHOD_NOT_FOUND_TYPE=URI.create(PROBLEM_BASE_URL+"/method-tidak-ditemukan");
     public static final URI METHOD_NOT_ALLOWED_TYPE= URI.create(PROBLEM_BASE_URL+"/http-method-tidak-diperkenankan");
+    public static final URI EMAIL_NOT_REGISTERED_TYPE=URI.create(PROBLEM_BASE_URL+"/email-not-registered");
+    public static final URI PHONE_NOT_REGISTERED_TYPE=URI.create(PROBLEM_BASE_URL+"/phone-not-registered");
+    public static final URI LOGIN_NOT_REGISTERED_TYPE=URI.create(PROBLEM_BASE_URL+"/login-not-registered");
 }

@@ -1,7 +1,6 @@
 package com.jasavast.service;
 
-import com.jasavast.core.error.EmailAlreadyUsedException;
-import com.jasavast.core.error.UsernameAlreadyUsedException;
+import com.jasavast.core.error.*;
 import com.jasavast.core.security.AuthorityConstants;
 import com.jasavast.core.security.SecurityUserService;
 import com.jasavast.domain.Authority;
@@ -62,6 +61,44 @@ public class AccountService {
                 });
     }
     public Mono<JSONObject> forgotPassword(UserDTO userDTO){
+        if (!userDTO.getEmail().isEmpty()){
+            //skema send to email
+            userRepository.findFirstByEmailIgnoreCase(userDTO.getEmail())
+                    .switchIfEmpty(Mono.defer(()->Mono.error(new EmailNotRegisteredException())))
+                    .doOnNext(user -> {
+                        //send email
+                    })
+                    .map(user -> {
+                        return new JSONObject()
+                                .put("success",true)
+                                .put("message","we have send mail to "+user.getEmail());
+                    });
+        }else if (!userDTO.getLogin().isEmpty()){
+            //skema ponsel
+            if (userDTO.getLogin().matches("^[0-9]{0,12}$")){
+                userRepository.findOneByLogin(userDTO.getLogin())
+                        .switchIfEmpty(Mono.defer(()->Mono.error(new PhoneNotRegisteredException())))
+                        .doOnNext(user -> {
+
+                        })
+                        .map(user -> {
+                            return new JSONObject()
+                                    .put("success",true)
+                                    .put("message","we have send mail to "+user.getEmail());
+                        });
+            }else{
+                userRepository.findOneByLogin(userDTO.getLogin())
+                        .switchIfEmpty(Mono.defer(()->Mono.error(new LoginNotAlreadyRegisteredException())))
+                        .doOnNext(user -> {
+
+                        })
+                        .map(user -> {
+                            return new JSONObject()
+                                    .put("success",true)
+                                    .put("message","we have send mail to "+user.getEmail());
+                        });
+            }
+        }
         return Mono.empty();
     }
 }
