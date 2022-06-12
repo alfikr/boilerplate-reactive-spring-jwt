@@ -36,7 +36,7 @@ public class AspectConfiguration {
                     .methodName(joinPoint.getSignature().getName())
                     .message(String.format("request {}",joinPoint.getArgs()))
                     .title("executed method")
-                    .build()).subscribe();
+                    .build());
             return o;
         }catch (Throwable e){
             long end = System.currentTimeMillis();
@@ -53,7 +53,7 @@ public class AspectConfiguration {
                     .message(String.format("request {} error on line {}",joinPoint.getArgs(),line))
                     .title("executed method")
                     .errorMessage(e.getMessage())
-                    .build()).subscribe();
+                    .build());
             throw e;
         }
     }

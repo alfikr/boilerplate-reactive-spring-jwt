@@ -1,6 +1,6 @@
 spring:
   r2dbc:
-    url:
+    url: r2dbc://
     username:
     password:
     pool:
