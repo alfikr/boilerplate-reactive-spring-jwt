@@ -1,8 +1,8 @@
 spring:
   r2dbc:
-    url: r2dbc://
-    username:
-    password:
+    url: r2dbc:postgresql://localhost:5432/coba
+    username: postgres
+    password: postgres
     pool:
       max-size: 20
       initial-size: 10
