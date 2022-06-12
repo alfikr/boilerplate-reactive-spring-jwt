@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.5.0</version>
+		<version>2.7.0</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.jasavast</groupId>
@@ -22,6 +22,7 @@
 		<springfox.version>3.0.0</springfox.version>
 		<zalando.webflux.version>0.26.2</zalando.webflux.version>
 		<javax.mail.version>1.6.2</javax.mail.version>
+		<spring-native.version>0.12.0-SNAPSHOT</spring-native.version>
 	</properties>
 
 	<dependencies>
