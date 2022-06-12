@@ -12,7 +12,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.concurrent.Executor;
-import java.util.concurrent.ThreadPoolExecutor;
 
 @Configuration
 @EnableScheduling

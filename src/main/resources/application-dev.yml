@@ -7,5 +7,9 @@ spring:
       max-size: 20
       initial-size: 10
       enabled: true
+  redis:
+    host: localhost
+    database: 0
+    password: redis
 server:
   port:
