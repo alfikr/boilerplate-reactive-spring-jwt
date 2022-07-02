@@ -85,16 +85,7 @@
 			<artifactId>json</artifactId>
 			<version>20211205</version>
 		</dependency>
-		<!--		database-->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-mongodb-reactive</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.github.kuliginstepan</groupId>
-			<artifactId>mongration</artifactId>
-			<version>${mongration.version}</version>
-		</dependency>
+
 		<!--		utility-->
 		<dependency>
 			<groupId>org.apache.commons</groupId>
