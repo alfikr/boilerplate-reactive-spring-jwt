@@ -4,33 +4,51 @@ import com.jasavast.core.annotation.DeleteExecution;
 import com.jasavast.core.annotation.GetExecution;
 import com.jasavast.core.annotation.PostExecution;
 import com.jasavast.core.annotation.PutExecution;
+import com.jasavast.core.api.ApiResponse;
+import com.jasavast.resource.vm.ReqVM;
 import com.jasavast.service.ApiAbstract;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
+import tools.jackson.databind.node.ObjectNode;
 
+/**
+ * Example API bean. Call it with
+ * <pre>
+ * GET    /api/request?method=apiCobaAja.getMethod&amp;foo=bar
+ * POST   /api/request  {"method":"apiCobaAja.postMethod","data":{...}}
+ * PUT    /api/request  {"method":"apiCobaAja.putMethod","data":{...}}
+ * DELETE /api/request?method=apiCobaAja.deleteMethod&amp;id=1
+ * </pre>
+ */
 @Component("apiCobaAja")
 public class CobaAja extends ApiAbstract {
+
     @GetExecution
-    public Mono<JSONObject> getMethod(){
-        return Mono.justOrEmpty(getDefault(new JSONObject().put("message","Get method success").put("data",reqData)));
+    public Mono<ApiResponse<ObjectNode>> getMethod(ReqVM request) {
+        return Mono.just(success(echo("Get method success", request)));
     }
+
     @PostExecution
-    public Mono<JSONObject> postMethod(){
-        return Mono.justOrEmpty(getDefault(new JSONObject().put("message","Post method success").put("data",reqData)));
+    public Mono<ApiResponse<ObjectNode>> postMethod(ReqVM request) {
+        return Mono.just(success(echo("Post method success", request)));
     }
+
     @PutExecution
-    public Mono<JSONObject> putMethod(){
-        return Mono.justOrEmpty(getDefault(new JSONObject().put("message","Put method success").put("data",reqData)));
+    public Mono<ApiResponse<ObjectNode>> putMethod(ReqVM request) {
+        return Mono.just(success(echo("Put method success", request)));
     }
+
+    /** Example of per-operation authorization on top of "authenticated". */
     @DeleteExecution
-    public Mono<JSONObject> deleteMethod(){
-        return Mono.justOrEmpty(getDefault(new JSONObject().put("message","Delete method success").put("data",reqData)));
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public Mono<ApiResponse<ObjectNode>> deleteMethod(ReqVM request) {
+        return Mono.just(success(echo("Delete method success", request)));
     }
-    private JSONObject getDefault(JSONObject data){
-        return new JSONObject()
-                .put("success",true)
-                .put("data",data).put("errors",new JSONArray());
+
+    private ObjectNode echo(String message, ReqVM request) {
+        ObjectNode node = object().put("message", message);
+        node.set("data", request.getData());
+        return node;
     }
 }

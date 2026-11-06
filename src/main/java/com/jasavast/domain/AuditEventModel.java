@@ -7,26 +7,23 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import javax.validation.constraints.NotNull;
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
+import java.time.Instant;
 
+/**
+ * Execution log written by {@code AspectConfiguration}. The collection grows with traffic;
+ * add a TTL index on {@code auditEventDate} (or a capped collection) matching your retention policy.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Document
+@Document("audit_events")
 public class AuditEventModel {
     @Id
     private String id;
-
-    @NotNull
     private String principal;
-
     @Builder.Default
-    private LocalDateTime auditEventDate=LocalDateTime.now();
-    private String auditEventType;
+    private Instant auditEventDate = Instant.now();
     private String logType;
     private long executionTime;
     private boolean error;
@@ -37,6 +34,4 @@ public class AuditEventModel {
     private String methodName;
     private String message;
     private String title;
-    private Map<String,String> data = new HashMap<>();
-
 }
