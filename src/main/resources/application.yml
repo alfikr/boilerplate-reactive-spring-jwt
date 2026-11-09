@@ -1,13 +1,40 @@
 spring:
-  main:
-    web-application-type: reactive
-  profiles:
-    active: dev
   application:
-    name: Applikasi
+    name: boilerplate
+  profiles:
+    # Used only when no profile is given (SPRING_PROFILES_ACTIVE). Never ship prod without
+    # setting the profile explicitly.
+    default: dev
+  data:
+    mongodb:
+      # Creates the unique indexes declared on the documents (users.login / users.email).
+      # For large production collections consider managing indexes with migrations instead.
+      auto-index-creation: true
+  mail:
+    properties:
+      mail.smtp.connectiontimeout: 5000
+      mail.smtp.timeout: 5000
+      mail.smtp.writetimeout: 5000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
 application:
   security:
-    validasi: 360000
-    remember-me: 1000000
-    # untuk generate key silahkan gunakan command openssl rand -base64 64
-    secret: vHPJST0lessUGvH/W8HVlihERtV4OWMSkseiDm/1/K/BPfvuyjr9JEqHsBPTpZatg4fx+ywtV7xb13zE0p8lTQ==
+    # Base64 HMAC key, >= 64 bytes (HS512). Generate: openssl rand -base64 64
+    # No default on purpose: startup fails if JWT_SECRET is not provided.
+    secret: ${JWT_SECRET:}
+    token-validity-seconds: 86400            # 24h
+    token-validity-seconds-remember-me: 2592000  # 30d
+  cors:
+    allowed-origins: []
+  mail:
+    from: ${MAIL_FROM:no-reply@localhost}
+    base-url: ${APP_BASE_URL:http://localhost:8080}

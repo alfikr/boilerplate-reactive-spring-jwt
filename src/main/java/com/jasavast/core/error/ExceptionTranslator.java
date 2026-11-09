@@ -1,124 +1,76 @@
 package com.jasavast.core.error;
 
-import com.jasavast.core.util.HeaderUtil;
-import org.apache.commons.lang3.StringUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.ConcurrencyFailureException;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
-import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.support.WebExchangeBindException;
+import org.springframework.web.reactive.result.method.annotation.ResponseEntityExceptionHandler;
 import org.springframework.web.server.ServerWebExchange;
-import org.zalando.problem.*;
-import org.zalando.problem.spring.webflux.advice.ProblemHandling;
-import org.zalando.problem.spring.webflux.advice.security.SecurityAdviceTrait;
-import org.zalando.problem.violations.ConstraintViolationProblem;
 import reactor.core.publisher.Mono;
 
 import java.net.URI;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
-@Component
-@ControllerAdvice
-public class ExceptionTranslator implements ProblemHandling, SecurityAdviceTrait {
-    private static final String FIELD_ERRORS_KEY = "fieldErrors";
+/**
+ * Translates exceptions into RFC 9457 problem details using Spring's built-in
+ * {@link ProblemDetail} support. {@link BadRequestAlertException} and every other
+ * {@code ErrorResponseException} are handled by the base class.
+ */
+@RestControllerAdvice
+@Slf4j
+public class ExceptionTranslator extends ResponseEntityExceptionHandler {
+
     private static final String MESSAGE_KEY = "message";
-    private static final String PATH_KEY = "path";
-    private static final String VIOLATIONS_KEY = "violations";
-    private final String applicationName="Jasavast";
+    private static final String FIELD_ERRORS_KEY = "fieldErrors";
 
     @Override
-    public Mono<ResponseEntity<Problem>> process(ResponseEntity<Problem> entity, ServerWebExchange request) {
-        if (entity==null){
-            return Mono.empty();
-        }
-        Problem problem= entity.getBody();
-        if (!(problem instanceof ConstraintViolationProblem || problem instanceof DefaultProblem)) {
-            return Mono.just(entity);
-        }
-        ProblemBuilder builder = Problem.builder()
-                .withType(Problem.DEFAULT_TYPE.equals(problem.getType()) ? ErrorConstants.DEFAULT_TYPE : problem.getType())
-                .withStatus(problem.getStatus())
-                .withTitle(problem.getTitle())
-                .with(PATH_KEY, request.getRequest().getPath().value());
-
-        if (problem instanceof ConstraintViolationProblem) {
-            builder
-                    .with(VIOLATIONS_KEY, ((ConstraintViolationProblem) problem).getViolations())
-                    .with(MESSAGE_KEY, ErrorConstants.ERR_VALIDATION);
-        } else {
-            builder
-                    .withCause(((DefaultProblem) problem).getCause())
-                    .withDetail(problem.getDetail())
-                    .withInstance(problem.getInstance());
-            problem.getParameters().forEach(builder::with);
-            if (!problem.getParameters().containsKey(MESSAGE_KEY) && problem.getStatus() != null) {
-                builder.with(MESSAGE_KEY, "error.http." + problem.getStatus().getStatusCode());
-            }
-        }
-        return Mono.just(new ResponseEntity<>(builder.build(), entity.getHeaders(), entity.getStatusCode()));
+    protected Mono<ResponseEntity<Object>> handleWebExchangeBindException(WebExchangeBindException ex, HttpHeaders headers,
+                                                                          HttpStatusCode status, ServerWebExchange exchange) {
+        List<FieldErrorVM> fieldErrors = ex.getBindingResult().getFieldErrors().stream()
+                .map(f -> new FieldErrorVM(f.getObjectName().replaceFirst("(DTO|VM)$", ""), f.getField(), f.getCode()))
+                .toList();
+        ProblemDetail problem = ex.getBody();
+        problem.setType(ErrorConstants.CONSTRAINT_VIOLATION_TYPE);
+        problem.setTitle("Data binding and validation failure");
+        problem.setProperty(MESSAGE_KEY, ErrorConstants.ERR_VALIDATION);
+        problem.setProperty(FIELD_ERRORS_KEY, fieldErrors);
+        return handleExceptionInternal(ex, problem, headers, status, exchange);
     }
 
-    @Override
-    public Mono<ResponseEntity<Problem>> handleBindingResult(WebExchangeBindException ex, ServerWebExchange request) {
-        BindingResult result = ex.getBindingResult();
-        List<FieldErrorVM> fieldErrors = result.getFieldErrors().stream()
-                .map(f -> new FieldErrorVM(f.getObjectName().replaceFirst("DTO$", ""), f.getField(), f.getCode()))
-                .collect(Collectors.toList());
-
-        Problem problem = Problem.builder()
-                .withType(ErrorConstants.CONSTRAINT_VIOLATION_TYPE)
-                .withTitle("Data binding and validation failure")
-                .withStatus(Status.BAD_REQUEST)
-                .with(MESSAGE_KEY, ErrorConstants.ERR_VALIDATION)
-                .with(FIELD_ERRORS_KEY, fieldErrors)
-                .build();
-        return create(ex, problem, request);
+    /** Login failures. One generic message for unknown user / bad password, to avoid user enumeration. */
+    @ExceptionHandler(AuthenticationException.class)
+    public Mono<ResponseEntity<Object>> handleAuthentication(AuthenticationException ex, ServerWebExchange exchange) {
+        String detail = ex instanceof DisabledException ? "User is not activated" : "Bad credentials";
+        return problem(ex, HttpStatus.UNAUTHORIZED, ErrorConstants.UNAUTHORIZED_TYPE, detail, "error.http.401", exchange);
     }
 
-    @Override
-    public ProblemBuilder prepare(Throwable throwable, StatusType status, URI type) {
-        return Problem.builder()
-                .withType(type)
-                .withStatus(status)
-                .withTitle(status.getReasonPhrase())
-                .withDetail(throwable.getMessage())
-                .withCause(Optional.ofNullable(throwable.getCause())
-                        .filter(cause->isCausalChainsEnabled())
-                        .map(this::toProblem)
-                        .orElse(null));
+    /** {@code @PreAuthorize} failures inside API operations. */
+    @ExceptionHandler(AccessDeniedException.class)
+    public Mono<ResponseEntity<Object>> handleAccessDenied(AccessDeniedException ex, ServerWebExchange exchange) {
+        return problem(ex, HttpStatus.FORBIDDEN, ErrorConstants.FORBIDDEN_TYPE, "Access denied", "error.http.403", exchange);
     }
 
-    private boolean containsPackageName(String message) {
-
-        // This list is for sure not complete
-        return StringUtils.containsAny(message, "org.", "java.", "net.", "javax.", "com.", "io.", "de.", "com.jasavast.ppob");
+    @ExceptionHandler(ConcurrencyFailureException.class)
+    public Mono<ResponseEntity<Object>> handleConcurrencyFailure(ConcurrencyFailureException ex, ServerWebExchange exchange) {
+        log.warn("Concurrency failure: {}", ex.getMessage());
+        return problem(ex, HttpStatus.CONFLICT, ErrorConstants.DEFAULT_TYPE, "Concurrent modification",
+                ErrorConstants.ERR_CONCURRENCY_FAILURE, exchange);
     }
 
-//    register custom exception
-
-    @ExceptionHandler
-    public Mono<ResponseEntity<Problem>> handleUsernameAlreadyUsedException(UsernameAlreadyUsedException ex, ServerWebExchange request) {
-        UsernameAlreadyUsedException problem = new UsernameAlreadyUsedException();
-        return create(problem, request, HeaderUtil.createFailureAlert(applicationName,  false, problem.getEntityName(), problem.getErrorKey(), problem.getMessage()));
+    private Mono<ResponseEntity<Object>> problem(Exception ex, HttpStatus status, URI type, String detail, String message,
+                                                 ServerWebExchange exchange) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, detail);
+        problem.setType(type);
+        problem.setProperty(MESSAGE_KEY, message);
+        return handleExceptionInternal(ex, problem, new HttpHeaders(), status, exchange);
     }
-
-
-    @ExceptionHandler
-    public Mono<ResponseEntity<Problem>> handleBadRequestAlertException(BadRequestAlertException ex, ServerWebExchange request) {
-        return create(ex, request, HeaderUtil.createFailureAlert(applicationName, false, ex.getEntityName(), ex.getErrorKey(), ex.getMessage()));
-    }
-
-    @ExceptionHandler
-    public Mono<ResponseEntity<Problem>> handleConcurrencyFailure(ConcurrencyFailureException ex, ServerWebExchange request) {
-        Problem problem = Problem.builder()
-                .withStatus(Status.CONFLICT)
-                .with(MESSAGE_KEY, ErrorConstants.ERR_CONCURRENCY_FAILURE)
-                .build();
-        return create(ex, problem, request);
-    }
-
 }

@@ -1,62 +1,43 @@
 package com.jasavast.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
-import org.springframework.data.web.ReactivePageableHandlerMethodArgumentResolver;
 import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.reactive.CorsWebFilter;
+import org.springframework.web.cors.reactive.CorsConfigurationSource;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
-import org.springframework.web.reactive.config.ResourceHandlerRegistry;
-import org.springframework.web.reactive.config.WebFluxConfigurer;
-import org.springframework.web.reactive.result.method.HandlerMethodArgumentResolver;
-import org.springframework.web.server.WebExceptionHandler;
-import org.zalando.problem.spring.webflux.advice.ProblemExceptionHandler;
-import org.zalando.problem.spring.webflux.advice.ProblemHandling;
+
+import java.time.Duration;
+import java.util.List;
+
 @Configuration
 @Slf4j
-public class WebConfiguration implements WebFluxConfigurer {
-    @Override
-    public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        String baseUrl="http://localhost:8080/";
+public class WebConfiguration {
 
-        registry
-                .addResourceHandler(baseUrl + "/**")
-                .addResourceLocations("classpath:/META-INF/resources/webjars/springfox-swagger-ui/")
-                .resourceChain(false);
-
-    }
-
+    /**
+     * CORS is applied by Spring Security ({@code http.cors(...)}) so pre-flight requests
+     * are answered before authentication. Origins must be listed explicitly: a wildcard
+     * origin combined with credentials is rejected by browsers and by Spring.
+     * Authentication uses a bearer header, not cookies, so credentials are not allowed.
+     */
     @Bean
-    public CorsWebFilter corsWebFilter(){
+    public CorsConfigurationSource corsConfigurationSource(ApplicationProperties properties) {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        CorsConfiguration config = new CorsConfiguration();
-        config.setAllowCredentials(true);
-        config.addAllowedOrigin("*");
-        config.addAllowedHeader("*");
-        config.addAllowedMethod("*");
-        if (config.getAllowedOrigins()!=null && !config.getAllowedOrigins().isEmpty()){
-            log.debug("Register cors filter");
-            source.registerCorsConfiguration("/api",config);
-            source.registerCorsConfiguration("/management",config);
-            source.registerCorsConfiguration("/v2/api-docs",config);
+        List<String> origins = properties.cors().allowedOrigins();
+        if (origins == null || origins.isEmpty()) {
+            log.debug("No CORS origins configured; cross-origin requests are not allowed");
+            return source;
         }
-        source.registerCorsConfiguration("/**",config);
-        return new CorsWebFilter(source);
-    }
-    @Bean
-    public HandlerMethodArgumentResolver reactivePageableHandlerMethodArgumentResolver(){
-        return new ReactivePageableHandlerMethodArgumentResolver();
-    }
-    @Bean
-    public HandlerMethodArgumentResolver reactiveSortHandlerMethodArgumentResolver(){
-        return new ReactivePageableHandlerMethodArgumentResolver();
-    }
-    @Bean
-    @Order(-2)
-    public WebExceptionHandler problemExceptionHandler(ObjectMapper mapper, ProblemHandling problemHandling){
-        return new ProblemExceptionHandler(mapper,problemHandling);
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOriginPatterns(origins);
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setExposedHeaders(List.of("Authorization", "Link", "X-Total-Count"));
+        config.setAllowCredentials(false);
+        config.setMaxAge(Duration.ofHours(1));
+        source.registerCorsConfiguration("/api/**", config);
+        source.registerCorsConfiguration("/v3/api-docs/**", config);
+        log.debug("CORS enabled for origins {}", origins);
+        return source;
     }
 }

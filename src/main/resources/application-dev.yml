@@ -1,4 +1,16 @@
 spring:
-  data:
-    mongodb:
-      uri: mongodb://localhost:27017/boiler-dev
+  mongodb:
+    uri: mongodb://localhost:27017/boiler-dev
+
+application:
+  security:
+    # DEV ONLY. Do not reuse this key in any other environment.
+    secret: ${JWT_SECRET:vHPJST0lessUGvH/W8HVlihERtV4OWMSkseiDm/1/K/BPfvuyjr9JEqHsBPTpZatg4fx+ywtV7xb13zE0p8lTQ==}
+  cors:
+    allowed-origins:
+      - http://localhost:3000
+      - http://localhost:4200
+
+logging:
+  level:
+    com.jasavast: DEBUG

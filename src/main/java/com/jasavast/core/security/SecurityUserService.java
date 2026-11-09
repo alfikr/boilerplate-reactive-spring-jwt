@@ -1,40 +1,38 @@
 package com.jasavast.core.security;
 
-
-import com.jasavast.core.error.UserNotActivatedException;
+import com.jasavast.domain.Authority;
 import com.jasavast.repository.UserRepository;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Locale;
 
+/**
+ * Loads users for {@code UserDetailsRepositoryReactiveAuthenticationManager}.
+ * <ul>
+ *   <li>Unknown user → empty Mono → the manager raises {@code BadCredentialsException}
+ *       (same response as a wrong password: no user enumeration).</li>
+ *   <li>Not activated → {@code disabled} → the manager raises {@code DisabledException},
+ *       checked after the password so it is only revealed to the account owner.</li>
+ * </ul>
+ */
 @Component("userDetailsService")
-@Slf4j
+@RequiredArgsConstructor
 public class SecurityUserService implements ReactiveUserDetailsService {
-    @Autowired
-    private UserRepository userRepository;
+
+    private final UserRepository userRepository;
+
     @Override
-    public Mono<UserDetails> findByUsername(String s) {
-        return userRepository.findOneByLogin(s.toLowerCase())
-                .switchIfEmpty(Mono.error(new UsernameNotFoundException("User "+s.toLowerCase()+" tidak ditemukan")))
-                .map(user -> {
-                    if (!user.isAktif()){
-                        throw new UserNotActivatedException("user "+ s.toLowerCase()+" belum melakukan aktivasi");
-                    }
-                    List<GrantedAuthority> grantedAuthorityList = user.getAuthorities()
-                            .stream()
-                            .map(authority -> new SimpleGrantedAuthority(authority.getName()))
-                            .collect(Collectors.toList());
-                    return new User(user.getLogin(),"",grantedAuthorityList);
-                });
+    public Mono<UserDetails> findByUsername(String login) {
+        return userRepository.findOneByLogin(login.toLowerCase(Locale.ROOT))
+                .map(user -> User.withUsername(user.getLogin())
+                        .password(user.getPassword())
+                        .disabled(!user.isAktif())
+                        .authorities(user.getAuthorities().stream().map(Authority::getName).toArray(String[]::new))
+                        .build());
     }
 }

@@ -1,0 +1,7 @@
+spring:
+  mongodb:
+    uri: ${MONGODB_URI}
+
+springdoc:
+  api-docs:
+    enabled: true
