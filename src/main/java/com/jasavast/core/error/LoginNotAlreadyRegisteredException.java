@@ -1,7 +1,9 @@
 package com.jasavast.core.error;
 
-public class LoginNotAlreadyRegisteredException extends BadRequestAlertException{
-    public LoginNotAlreadyRegisteredException(){
-        super(ErrorConstants.LOGIN_NOT_REGISTERED_TYPE,"Member login not found","users","404");
+import org.springframework.http.HttpStatus;
+
+public class LoginNotAlreadyRegisteredException extends BadRequestAlertException {
+    public LoginNotAlreadyRegisteredException() {
+        super(HttpStatus.NOT_FOUND, ErrorConstants.LOGIN_NOT_REGISTERED_TYPE, "Member login not found", "users", "usernotfound");
     }
 }

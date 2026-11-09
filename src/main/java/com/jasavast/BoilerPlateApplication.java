@@ -4,27 +4,29 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.core.env.Environment;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 import java.util.Optional;
 
 @SpringBootApplication
+@ConfigurationPropertiesScan
 @Slf4j
 public class BoilerPlateApplication {
 
 	public static void main(String[] args) {
-		SpringApplication application= new SpringApplication(BoilerPlateApplication.class);
-		Environment env = application.run(args).getEnvironment();
+		Environment env = SpringApplication.run(BoilerPlateApplication.class, args).getEnvironment();
 		logApplicationStartup(env);
 	}
 
-	private static void logApplicationStartup(Environment env){
+	private static void logApplicationStartup(Environment env) {
 		String protocol = Optional.ofNullable(env.getProperty("server.ssl.key-store")).map(key -> "https").orElse("http");
-		String serverPort = env.getProperty("server.port");
-		String contextPath = Optional
-				.ofNullable(env.getProperty("server.servlet.context-path"))
+		// local.server.port is the port actually bound (also correct for server.port=0)
+		String serverPort = env.getProperty("local.server.port", env.getProperty("server.port", "8080"));
+		String basePath = Optional.ofNullable(env.getProperty("spring.webflux.base-path"))
 				.filter(StringUtils::isNotBlank)
 				.orElse("/");
 		String hostAddress = "localhost";
@@ -33,22 +35,17 @@ public class BoilerPlateApplication {
 		} catch (UnknownHostException e) {
 			log.warn("The host name could not be determined, using `localhost` as fallback");
 		}
-		log.info(
-				"\n----------------------------------------------------------\n\t" +
-						"Application '{}' is running! Access URLs:\n\t" +
-						"Local: \t\t{}://localhost:{}{}\n\t" +
-						"External: \t{}://{}:{}{}\n\t" +
-						"Profile(s): \t{}\n----------------------------------------------------------",
-				env.getProperty("spring.application.name"),
-				protocol,
-				serverPort,
-				contextPath,
-				protocol,
-				hostAddress,
-				serverPort,
-				contextPath,
-				env.getActiveProfiles()
-		);
-	}
+		log.info("""
 
+						----------------------------------------------------------
+						\tApplication '{}' is running! Access URLs:
+						\tLocal: \t\t{}://localhost:{}{}
+						\tExternal: \t{}://{}:{}{}
+						\tProfile(s): \t{}
+						----------------------------------------------------------""",
+				env.getProperty("spring.application.name"),
+				protocol, serverPort, basePath,
+				protocol, hostAddress, serverPort, basePath,
+				Arrays.toString(env.getActiveProfiles()));
+	}
 }

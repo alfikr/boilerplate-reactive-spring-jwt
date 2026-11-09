@@ -1,15 +1,18 @@
-spring:
-  r2dbc:
-    url: r2dbc:postgresql://localhost:5432/coba
-    username: postgres
-    password: postgres
-    pool:
-      max-size: 20
-      initial-size: 10
-      enabled: true
-  redis:
-    host: localhost
-    database: 0
-    password: redis
-server:
-  port:
+# DEV ONLY defaults. Override any of them with environment variables.
+DB_HOST: localhost
+DB_NAME: coba
+DB_USERNAME: postgres
+DB_PASSWORD: postgres
+
+application:
+  security:
+    # DEV ONLY. Do not reuse this key in any other environment.
+    secret: ${JWT_SECRET:vHPJST0lessUGvH/W8HVlihERtV4OWMSkseiDm/1/K/BPfvuyjr9JEqHsBPTpZatg4fx+ywtV7xb13zE0p8lTQ==}
+  cors:
+    allowed-origins:
+      - http://localhost:3000
+      - http://localhost:4200
+
+logging:
+  level:
+    com.jasavast: DEBUG
