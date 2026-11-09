@@ -1,10 +1,4 @@
-server:
-  port:
-spring:
-  r2dbc:
-    url:
-    username:
-    password:
-    pool:
-      initial-size:
-      enabled: true
+# Database: DB_HOST, DB_PORT, DB_NAME, DB_USERNAME, DB_PASSWORD (environment variables).
+springdoc:
+  api-docs:
+    enabled: true

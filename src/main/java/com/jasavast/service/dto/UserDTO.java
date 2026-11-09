@@ -1,18 +1,15 @@
 package com.jasavast.service.dto;
 
-import com.jasavast.domain.Authority;
-import lombok.Builder;
-import lombok.Data;
+import com.jasavast.domain.User;
 
-import java.util.HashSet;
 import java.util.Set;
 
-@Data
-public class UserDTO {
-    private String login;
-    private String firstName;
-    private String lastName;
-    private String email;
-    private boolean aktif;
-    private Set<Authority> authoritySet= new HashSet<>();
+/** Read model of the current account (never exposes password or one-time key hashes). */
+public record UserDTO(Long id, String login, String firstName, String lastName, String email,
+                      boolean aktif, Set<String> authorities) {
+
+    public static UserDTO from(User user, Set<String> authorities) {
+        return new UserDTO(user.getId(), user.getLogin(), user.getFirstName(), user.getLastName(), user.getEmail(),
+                user.isAktif(), Set.copyOf(authorities));
+    }
 }

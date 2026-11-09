@@ -1,0 +1,6 @@
+application:
+  security:
+    secret: dGVzdC1zZWNyZXQtdGVzdC1zZWNyZXQtdGVzdC1zZWNyZXQtdGVzdC1zZWNyZXQtdGVzdC1zZWNyZXQtMTIzNDU2Nzg5MA==
+logging:
+  level:
+    com.jasavast: INFO
